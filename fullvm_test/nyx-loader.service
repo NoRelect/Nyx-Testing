@@ -1,0 +1,10 @@
+[Unit]
+Description=Nyx Loader
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+ExecStart=/opt/nyx/loader
+
+[Install]
+WantedBy=multi-user.target

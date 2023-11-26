@@ -1,7 +1,6 @@
 
 #![enable(implicit_some)]
 (
-      include_default_config_path: "../../misc/default_config_snapshot.ron",
     runner: QemuSnapshot((
         qemu_binary: "../qemu-nyx/x86_64-softmmu/qemu-system-x86_64",
         hda: "/tmp/hda",

@@ -277,7 +277,7 @@ mod tests {
     fn test_create_and_load_pre_snapshot() {
         setup();
         /* create pre snapshot */
-        let config = NyxConfig::load("out/test_custom_buffer_sizes_host_to_guest_64/").unwrap();
+        let config = NyxConfig::load("out/test_create_and_load_pre_snapshot/").unwrap();
         //println!("config: {}", config);
 
         let qemu_binary = config.qemu_binary_path().unwrap();
@@ -354,6 +354,79 @@ mod tests {
             fs::remove_dir_all("/tmp/snapshot_new").unwrap();
         }
         
+        assert!(success);
+    }
+
+    #[test]
+    fn test_create_and_load_fullvm_pre_snapshot() {
+        setup();
+        let mut cmd = vec![];
+        cmd.push("qemu-nyx/x86_64-softmmu/qemu-system-x86_64".to_string());
+        cmd.push("-display".to_string());
+        cmd.push("none".to_string());
+        cmd.push("-enable-kvm".to_string());
+
+        cmd.push("-net".to_string());
+        cmd.push("none".to_string());
+
+        cmd.push("-hda".to_string());
+        cmd.push("fullvm_test/customized.img".to_string());
+
+        cmd.push("-k".to_string());
+        cmd.push("de".to_string());
+        cmd.push("-m".to_string());
+        cmd.push("512".to_string());
+
+        cmd.push("-machine".to_string());
+        cmd.push("kAFL64-v1".to_string());
+
+        cmd.push("-cpu".to_string());
+        cmd.push("kAFL64-Hypervisor-v1,+vmx".to_string());
+
+        cmd.push("-d".to_string());
+        cmd.push("nyx".to_string());
+        cmd.push("-D".to_string());
+        cmd.push("/tmp/qemu_nyx_log".to_string());
+
+        cmd.push("-fast_vm_reload".to_string());
+        cmd.push("pre_path=/tmp/snapshot_new,load=off".to_string());
+
+        //println!("{}", &cmd.join(" "));
+
+        if Path::new(&format!("/tmp/snapshot_new")).exists(){
+            fs::remove_dir_all("/tmp/snapshot_new").unwrap();
+        }
+        fs::create_dir("/tmp/snapshot_new").unwrap();
+
+        let output = Command::new(&cmd[0])
+        .args(&cmd[1..])
+        .env("NYX_DISABLE_DIRTY_RING", "y")
+        .output()
+        .expect("failed to execute process");
+
+        println!("Stdout:\n{}\n", &String::from_utf8(output.stdout).unwrap());
+        println!("Stderr:\n{}\n", &String::from_utf8(output.stderr).unwrap());
+
+        let output = fs::read_to_string("/tmp/qemu_nyx_log").unwrap();
+        assert!(output.contains("Creating pre image snapshot"));
+        assert!(output.contains("switching to secondary CoW buffer"));
+
+        /* load pre snapshot */
+        let workdir = &format!("/tmp/workdir_{}", gettid());
+        let mut process = init_default("out/test_create_and_load_fullvm_pre_snapshot/", workdir, false).unwrap();
+
+        let success =  match process.exec() {
+            NyxReturnValue::Normal => true,
+            _ => false,
+        };
+
+        process.shutdown();
+        fs::remove_dir_all(Path::new(workdir)).unwrap();
+
+        if Path::new(&format!("/tmp/snapshot_new")).exists(){
+            fs::remove_dir_all("/tmp/snapshot_new").unwrap();
+        }
+
         assert!(success);
     }
 

@@ -81,6 +81,15 @@ gcc misc/src/helper.c  misc/src/test_create_and_load_pre_snapshot.c -static -I m
 gcc misc/src/helper.c  misc/src/test_create_and_load_pre_snapshot.c -static -I misc/src/ -I ./packer/  -DNO_PT_NYX -o out/test_create_and_load_pre_snapshot/target_no_pt
 cp misc/config_snapshot.ron out/test_create_and_load_pre_snapshot/config.ron
 
+echo "Compiling test: test_create_and_load_fullvm_pre_snapshot"
+cp -R out/sharedir_template_64 out/test_create_and_load_fullvm_pre_snapshot/
+gcc misc/src/helper.c  misc/src/test_create_and_load_pre_snapshot.c -static -I misc/src/ -I ./packer/ -o out/test_create_and_load_fullvm_pre_snapshot/target
+gcc misc/src/helper.c  misc/src/test_create_and_load_pre_snapshot.c -static -I misc/src/ -I ./packer/  -DNO_PT_NYX -o out/test_create_and_load_fullvm_pre_snapshot/target_no_pt
+cd fullvm_test
+bash customize_image.sh
+cd ..
+cp misc/config_snapshot.ron out/test_create_and_load_fullvm_pre_snapshot/config.ron
+
 echo "Compiling test: test_skip_get_host_configuration_64"
 cp -R out/sharedir_template_64 out/test_skip_get_host_configuration_64/
 gcc misc/src/helper.c  misc/src/test_skip_get_host_configuration.c -static -I misc/src/ -I ./packer/ -o out/test_skip_get_host_configuration_64/target
